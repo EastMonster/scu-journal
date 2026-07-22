@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="按名称、缩写、ISSN 和学科分类查询川大期刊分级信息。">
+  <meta name="description" content="查询川大期刊分级及 CCF 推荐期刊与会议目录。">
   <title>川大期刊分级查询</title>
   <link rel="icon" href="./favicon.svg">
   <link rel="stylesheet" href="./styles.css">
@@ -13,22 +13,36 @@
   <main>
     <header class="hero">
       <div class="eyebrow"><span></span>SCU Academic Journal Index</div>
-      <h1>川大期刊分级查询</h1>
-      <p>汇集川大、CCF 与中科院分区信息，一次检索，快速对照。</p>
+      <div class="hero-title-row">
+        <h1 id="page-title">川大期刊分级查询</h1>
+        <div class="mode-switch" role="group" aria-label="查询目录切换">
+          <button type="button" data-mode="scu" class="active" aria-pressed="true">川大分级</button>
+          <button type="button" data-mode="ccf" aria-pressed="false">CCF 目录</button>
+        </div>
+      </div>
+      <p id="hero-description">汇集川大、CCF 与中科院分区信息，一次检索，快速对照。</p>
     </header>
 
-    <section class="search-panel" aria-label="期刊筛选">
+    <section id="search-panel" class="search-panel" aria-label="期刊筛选">
       <label class="search-field">
-        <span class="sr-only">搜索期刊</span>
+        <span id="search-label" class="sr-only">搜索期刊</span>
         <span class="search-icon" aria-hidden="true"></span>
         <input id="query" placeholder="输入期刊名称、缩写或 ISSN" autocomplete="off">
         <button id="clear" class="clear" type="button" aria-label="清空搜索" hidden>×</button>
       </label>
       <label class="category-field">
-        <span class="sr-only">筛选学科分类</span>
+        <span id="category-label" class="sr-only">筛选学科分类</span>
         <select id="category"><option value="">全部学科</option></select>
       </label>
-      <label class="ccf-toggle">
+      <label id="type-field" class="type-field" hidden>
+        <span class="sr-only">筛选类型</span>
+        <select id="type-filter">
+          <option value="">全部类型</option>
+          <option value="期刊">期刊</option>
+          <option value="会议">会议</option>
+        </select>
+      </label>
+      <label id="ccf-toggle-field" class="ccf-toggle">
         <input id="show-ccf" type="checkbox">
         <span class="toggle-track" aria-hidden="true"><span></span></span>
         <span>显示 CCF</span>
@@ -37,10 +51,10 @@
 
     <section class="results" aria-live="polite">
       <div class="results-heading">
-        <div><span class="results-label">检索结果</span><strong id="result-count">—</strong><span>条期刊</span></div>
+        <div><span class="results-label">检索结果</span><strong id="result-count">—</strong><span id="result-unit">条期刊</span></div>
         <span>数据共 <span id="total-count">—</span> 条</span>
       </div>
-      <div id="content" class="message">正在加载期刊数据…</div>
+      <div id="content" class="message">正在加载目录数据…</div>
       <nav id="pagination" class="pagination" aria-label="结果分页" hidden>
         <button id="previous" type="button">上一页</button>
         <div id="page-numbers"></div>
@@ -91,7 +105,7 @@
         <div class="reference-body">
           <ul>
             <li><strong>川大分级数据来源：</strong>《高质量科技期刊及学术会议分级参考方案（暂行）（2021）》</li>
-            <li><strong>CCF 分级数据来源：</strong>《第七版中国计算机学会推荐国际学术会议和期刊目录》</li>
+            <li><strong>CCF 分级数据来源：</strong>《第七版中国计算机学会推荐国际学术会议和期刊目录（2026）》</li>
             <li><strong>中科院分级数据来源：</strong>中国科学院期刊分区 2025 年版</li>
           </ul>
         </div>

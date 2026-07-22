@@ -1,11 +1,15 @@
 const PAGE_SIZE = 20;
+let scuJournals = [];
+let ccfEntries = [];
 let journals = [];
 let filtered = [];
 let page = 1;
+let mode = "scu";
 
 const $ = (selector) => document.querySelector(selector);
 const queryInput = $("#query");
 const categorySelect = $("#category");
+const typeSelect = $("#type-filter");
 const ccfToggle = $("#show-ccf");
 
 function parseCsv(source) {
@@ -73,12 +77,14 @@ function cell(label, child) {
 }
 
 function renderTable(rows, terms) {
+  const isCcf = mode === "ccf";
+  const showScuRank = isCcf && typeSelect.value !== "会议";
   const wrap = document.createElement("div");
   wrap.className = "table-wrap";
   const table = document.createElement("table");
   const thead = document.createElement("thead");
   const header = document.createElement("tr");
-  ["期刊", "学科分类", "川大", ...(ccfToggle.checked ? ["CCF"] : []), "中科院分区", "Top 期刊"].forEach((text) => {
+  (isCcf ? ["名称", "类型", "大类", "CCF", ...(showScuRank ? ["川大"] : [])] : ["期刊", "学科分类", "川大", ...(ccfToggle.checked ? ["CCF"] : []), "中科院分区", "Top 期刊"]).forEach((text) => {
     const th = document.createElement("th"); th.textContent = text; header.append(th);
   });
   thead.append(header);
@@ -90,19 +96,26 @@ function renderTable(rows, terms) {
     const name = document.createElement("strong");
     appendHighlighted(name, journal.fullname, terms);
     const details = document.createElement("span");
-    appendHighlighted(details, journal.abbr, terms);
-    details.append(" · ");
-    appendHighlighted(details, journal.issn, terms);
+    if (journal.abbr) appendHighlighted(details, journal.abbr, terms);
+    if (journal.abbr && journal.issn) details.append(" · ");
+    if (journal.issn) appendHighlighted(details, journal.issn, terms);
     journalCell.append(name, details);
     tr.append(journalCell);
-    tr.append(cell("学科分类", journal.category === "/" ? "未分类" : journal.category));
-    tr.append(cell("川大", grade(journal.rank, "red")));
-    if (ccfToggle.checked) tr.append(cell("CCF", grade(journal["ccf-rank"], "gold")));
-    tr.append(cell("中科院分区", grade(journal["分区"] ? `${journal["分区"]} 区` : "")));
-    const top = document.createElement("span");
-    top.className = journal["Top 期刊"] === "是" ? "top" : "muted";
-    top.textContent = journal["Top 期刊"] === "是" ? "TOP" : "—";
-    tr.append(cell("Top 期刊", top));
+    if (isCcf) {
+      tr.append(cell("类型", journal.type));
+      tr.append(cell("大类", journal.category));
+      tr.append(cell("CCF", grade(journal.rank, "gold")));
+      if (showScuRank) tr.append(cell("川大", grade(journal.scuRank, "red")));
+    } else {
+      tr.append(cell("学科分类", journal.category === "/" ? "未分类" : journal.category));
+      tr.append(cell("川大", grade(journal.rank, "red")));
+      if (ccfToggle.checked) tr.append(cell("CCF", grade(journal["ccf-rank"], "gold")));
+      tr.append(cell("中科院分区", grade(journal["分区"] ? `${journal["分区"]} 区` : "")));
+      const top = document.createElement("span");
+      top.className = journal["Top 期刊"] === "是" ? "top" : "muted";
+      top.textContent = journal["Top 期刊"] === "是" ? "TOP" : "—";
+      tr.append(cell("Top 期刊", top));
+    }
     tbody.append(tr);
   });
   table.append(thead, tbody); wrap.append(table);
@@ -112,8 +125,10 @@ function renderTable(rows, terms) {
 function render() {
   const terms = queryTerms(queryInput.value);
   const category = categorySelect.value;
+  const type = mode === "ccf" ? typeSelect.value : "";
   filtered = journals.filter((journal) =>
     (!category || journal.category === category) &&
+    (!type || journal.type === type) &&
     matchesQuery(journal, terms)
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -124,7 +139,7 @@ function render() {
   content.replaceChildren();
   content.className = visible.length ? "" : "message";
   if (visible.length) content.append(renderTable(visible, terms));
-  else content.textContent = "没有找到匹配的期刊，请尝试其他关键词或分类。";
+  else content.textContent = mode === "ccf" ? "没有找到匹配的期刊或会议，请尝试其他关键词或筛选条件。" : "没有找到匹配的期刊，请尝试其他关键词或分类。";
 
   const pagination = $("#pagination");
   pagination.hidden = filtered.length <= PAGE_SIZE;
@@ -144,33 +159,80 @@ function render() {
 }
 
 function resetAndRender() { page = 1; $("#clear").hidden = !queryInput.value; render(); }
+
+function populateCategories() {
+  categorySelect.replaceChildren();
+  const all = document.createElement("option");
+  all.value = "";
+  all.textContent = mode === "ccf" ? "全部大类" : "全部学科";
+  categorySelect.append(all);
+  [...new Set(journals.map((journal) => journal.category))]
+    .sort((a, b) => a.localeCompare(b, "zh-CN"))
+    .forEach((category) => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category === "/" ? "未分类" : category;
+      categorySelect.append(option);
+    });
+}
+
+function setMode(nextMode) {
+  mode = nextMode;
+  journals = mode === "ccf" ? ccfEntries : scuJournals;
+  queryInput.value = "";
+  typeSelect.value = "";
+  $("#clear").hidden = true;
+  document.title = mode === "ccf" ? "CCF 期刊与会议查询" : "川大期刊分级查询";
+  $("#page-title").textContent = mode === "ccf" ? "CCF 期刊与会议查询" : "川大期刊分级查询";
+  $("#hero-description").textContent = mode === "ccf" ? "查询 CCF 推荐国际学术期刊与会议的大类、CCF 分级及川大分级。" : "汇集川大、CCF 与中科院分区信息，一次检索，快速对照。";
+  queryInput.placeholder = mode === "ccf" ? "输入期刊或会议名称、简称" : "输入期刊名称、缩写或 ISSN";
+  $("#search-label").textContent = mode === "ccf" ? "搜索期刊或会议" : "搜索期刊";
+  $("#category-label").textContent = mode === "ccf" ? "筛选大类" : "筛选学科分类";
+  $("#search-panel").setAttribute("aria-label", mode === "ccf" ? "CCF 期刊与会议筛选" : "期刊筛选");
+  $("#result-unit").textContent = mode === "ccf" ? "条记录" : "条期刊";
+  $("#ccf-toggle-field").hidden = mode === "ccf";
+  $("#type-field").hidden = mode !== "ccf";
+  document.querySelectorAll(".mode-switch button").forEach((button) => {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active);
+  });
+  populateCategories();
+  $("#total-count").textContent = journals.length.toLocaleString("zh-CN");
+  resetAndRender();
+}
+
 queryInput.addEventListener("input", resetAndRender);
 $("#clear").addEventListener("click", () => { queryInput.value = ""; queryInput.focus(); resetAndRender(); });
-categorySelect.addEventListener("change", () => { ccfToggle.checked = categorySelect.value === "计算机科学"; resetAndRender(); });
+categorySelect.addEventListener("change", () => { if (mode === "scu") ccfToggle.checked = categorySelect.value === "计算机科学"; resetAndRender(); });
+typeSelect.addEventListener("change", resetAndRender);
 ccfToggle.addEventListener("change", render);
+document.querySelectorAll(".mode-switch button").forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
 $("#previous").addEventListener("click", () => { page--; render(); });
 $("#next").addEventListener("click", () => { page++; render(); });
 
 const searchCheck = { fullname: "Science Translational Medicine", abbr: "SCI TRANSL MED", issn: "1946-6234" };
 console.assert(parseCsv('a,b\n"x,y",z')[0].a === "x,y" && getPageNumbers(10, 10).join() === "8,9,10" && matchesQuery(searchCheck, queryTerms("trans m")) && !matchesQuery(searchCheck, queryTerms("trans x")));
 
-fetch("./rank.csv")
-  .then((response) => { if (!response.ok) throw new Error(); return response.text(); })
-  .then((text) => {
-    journals = parseCsv(text);
-    [...new Set(journals.map((journal) => journal.category))]
-      .sort((a, b) => a.localeCompare(b, "zh-CN"))
-      .forEach((category) => {
-        const option = document.createElement("option");
-        option.value = category;
-        option.textContent = category === "/" ? "未分类" : category;
-        categorySelect.append(option);
-      });
-    $("#total-count").textContent = journals.length.toLocaleString("zh-CN");
-    render();
+Promise.all(["./rank.csv", "./ccf-directory.csv"].map((url) => fetch(url).then((response) => {
+  if (!response.ok) throw new Error();
+  return response.text();
+})))
+  .then(([scuText, ccfText]) => {
+    scuJournals = parseCsv(scuText);
+    ccfEntries = parseCsv(ccfText).map((entry) => ({
+      fullname: entry["全称"],
+      abbr: entry["简称"],
+      issn: "",
+      category: entry["大类"],
+      type: entry["类型"],
+      rank: entry["CCF分级"],
+      scuRank: entry["川大分级"],
+    }));
+    setMode("scu");
   })
   .catch(() => {
     const content = $("#content");
     content.className = "message error";
-    content.textContent = "无法加载期刊数据。请通过静态服务器访问本目录，不要直接双击 HTML 文件。";
+    content.textContent = "无法加载目录数据。请通过静态服务器访问本目录，不要直接双击 HTML 文件。";
   });
