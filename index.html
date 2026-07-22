@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="按名称、缩写、ISSN 和学科分类查询川大期刊分级信息。">
+  <title>川大期刊分级查询</title>
+  <link rel="icon" href="./favicon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <div class="eyebrow"><span></span>SCU Academic Journal Index</div>
+      <h1>川大期刊分级查询</h1>
+      <p>汇集川大、CCF 与中科院分区信息，一次检索，快速对照。</p>
+    </header>
+
+    <section class="search-panel" aria-label="期刊筛选">
+      <label class="search-field">
+        <span class="sr-only">搜索期刊</span>
+        <span class="search-icon" aria-hidden="true"></span>
+        <input id="query" placeholder="输入期刊名称、缩写或 ISSN" autocomplete="off">
+        <button id="clear" class="clear" type="button" aria-label="清空搜索" hidden>×</button>
+      </label>
+      <label class="category-field">
+        <span class="sr-only">筛选学科分类</span>
+        <select id="category"><option value="">全部学科</option></select>
+      </label>
+      <label class="ccf-toggle">
+        <input id="show-ccf" type="checkbox">
+        <span class="toggle-track" aria-hidden="true"><span></span></span>
+        <span>显示 CCF</span>
+      </label>
+    </section>
+
+    <section class="results" aria-live="polite">
+      <div class="results-heading">
+        <div><span class="results-label">检索结果</span><strong id="result-count">—</strong><span>条期刊</span></div>
+        <span>数据共 <span id="total-count">—</span> 条</span>
+      </div>
+      <div id="content" class="message">正在加载期刊数据…</div>
+      <nav id="pagination" class="pagination" aria-label="结果分页" hidden>
+        <button id="previous" type="button">上一页</button>
+        <div id="page-numbers"></div>
+        <button id="next" type="button">下一页</button>
+      </nav>
+
+      <details class="reference-note">
+        <summary>查看川大期刊与学术会议分级参考说明</summary>
+        <div class="reference-body">
+          <h2>高质量科技期刊及学术会议分级参考方案</h2>
+          <p class="reference-subtitle">（暂行）</p>
+          <div class="reference-grid">
+            <div class="reference-head"><span>级别</span><span>范围</span></div>
+            <section class="reference-row"><strong>A</strong><ol>
+              <li>业界公认的具有特别重大影响力的国际顶级期刊，如 Science、Nature、Cell（均为正刊）</li>
+              <li>经学院教授委员会推荐、校学术委员会认定的与上述水平相当的科技期刊或学术会议</li>
+            </ol></section>
+            <section class="reference-row"><strong>A−</strong><ol>
+              <li>业界公认的具有重大影响力的国际顶级期刊，如 Science、Nature 系列期刊、数学四大期刊（Journal of The American Mathematical Society、Annals of Mathematics、Inventiones Mathematicae、Acta Mathematica）或与其水平相当的期刊</li>
+              <li>经学院教授委员会推荐、校学术委员会认定的与上述水平相当的科技期刊或学术会议</li>
+            </ol></section>
+            <section class="reference-row"><strong>B</strong><ol>
+              <li>业界公认的具有重要影响力的国际顶级期刊，如中科院期刊分区大类 1 区（升级版，下同，约学科前 5%）科技期刊或与其水平相当的期刊</li>
+              <li>具有重要国际影响力的国内期刊，如中国科技期刊卓越行动计划入选期刊目录中的领军期刊</li>
+              <li>具有重要国际影响力的国内外顶级学术会议作大会邀请／主旨报告，如中国计算机学会推荐 A 类国际学术会议发表主会长文（CCF-A 主会长文）等</li>
+              <li>经学院教授委员会推荐、校学术委员会认定的与上述水平相当的科技期刊或学术会议</li>
+            </ol></section>
+            <section class="reference-row"><strong>C</strong><ol>
+              <li>业界公认的具有较重要影响力的国际重要期刊，如中科院期刊分区大类 2 区（约学科前 5%-20%）科技期刊或与其水平相当的期刊</li>
+              <li>具有较重要国际影响力的国内期刊，如中国科技期刊卓越行动计划入选期刊目录中的重点期刊</li>
+              <li>具有较重要国际影响力的国内外顶级学术会议作大会邀请／主旨报告，如：中国计算机学会推荐 A 类国际学术会议发表主会短文（CCF-A 主会短文），中国计算机学会推荐 B 类国际学术会议发表主会长文（CCF-B 主会长文）</li>
+              <li>经学院教授委员会推荐、校学术委员会认定的与上述水平相当的科技期刊或学术会议</li>
+            </ol></section>
+            <section class="reference-row"><strong>D</strong><ol>
+              <li>业界公认的具有较大影响力的重要期刊，如中科院期刊分区大类 3 区（约学科前 20%-50%）科技期刊或与其水平相当的期刊</li>
+              <li>经学院教授委员会推荐、校学术委员会认定的与上述水平相当的科技期刊或学术会议</li>
+            </ol></section>
+            <section class="reference-row"><strong>E</strong><ol>
+              <li>业界公认的具有一定国际影响力的重要期刊，如中科院期刊分区大类 4 区（约学科 50%-100%）科技期刊或与其水平相当的期刊</li>
+              <li>经学院教授委员会推荐、校学术委员会认定的与上述水平相当的科技期刊或学术会议</li>
+            </ol></section>
+          </div>
+        </div>
+      </details>
+
+      <details class="reference-note">
+        <summary>查看数据来源说明</summary>
+        <div class="reference-body">
+          <ul>
+            <li><strong>川大分级数据来源：</strong>《高质量科技期刊及学术会议分级参考方案（暂行）（2021）》</li>
+            <li><strong>CCF 分级数据来源：</strong>《第七版中国计算机学会推荐国际学术会议和期刊目录》</li>
+            <li><strong>中科院分级数据来源：</strong>中国科学院期刊分区 2025 年版</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+    <footer>数据仅供学术评价参考 · 更新于 2025 年</footer>
+  </main>
+</body>
+</html>
