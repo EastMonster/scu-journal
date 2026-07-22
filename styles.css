@@ -56,9 +56,11 @@ mark { padding:0; color:var(--red); background:transparent; font-weight:800; }
 .muted { color:#bbb7af; }
 .message { padding:72px 24px; border:1px dashed var(--line); border-radius:14px; color:var(--muted); background:rgb(255 254 250/.72); text-align:center; }
 .message.error { color:var(--red); }
-.pagination { display:flex; justify-content:center; gap:14px; margin-top:24px; }
-.pagination div { display:flex; gap:6px; }
-.pagination button { min-width:40px; height:40px; padding:0 13px; border:1px solid var(--line); border-radius:8px; color:var(--ink); background:var(--white); }
+.pagination { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:24px; }
+.pagination div { display:flex; align-items:center; gap:6px; }
+.pagination button { min-width:44px; height:44px; padding:0 12px; border:1px solid var(--line); border-radius:11px; color:var(--ink); background:var(--white); }
+.pagination>button { padding:0; font-size:22px; }
+.pagination .ellipsis { display:inline-flex; width:24px; height:44px; align-items:center; justify-content:center; color:var(--muted); }
 .pagination button:hover:not(:disabled),.pagination button.active { color:#fff; border-color:var(--red); background:var(--red); }
 .pagination button:disabled { cursor:not-allowed; opacity:.4; }
 .reference-note { margin-top:28px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:var(--white); }
@@ -99,8 +101,11 @@ footer { padding:28px 24px 38px; border-top:1px solid var(--line); color:#8b8b88
   td::before { color:#8a8d91; font-size:11px; content:attr(data-label); }
   .journal-cell { display:block; grid-column:1/-1; width:auto; padding-bottom:12px; border-bottom:1px solid #ebe6dc; }
   .journal-cell::before { display:none; }
-  .pagination { gap:7px; }
-  .pagination>button { padding:0 10px; }
+  .pagination { gap:3px; }
+  .pagination div { gap:3px; }
+  .pagination button { min-width:32px; height:38px; padding:0 7px; border-radius:9px; }
+  .pagination>button { padding:0; }
+  .pagination .ellipsis { width:14px; height:38px; }
   .grade,.top { min-width:34px; height:27px; font-size:12px; }
   .reference-body { padding:16px 12px; }
   .reference-body h2 { font-size:19px; line-height:1.4; }

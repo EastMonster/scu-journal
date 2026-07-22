@@ -34,10 +34,11 @@ function parseCsv(source) {
   );
 }
 
-function getPageNumbers(current, total) {
-  const count = Math.min(3, total);
-  const start = Math.max(1, Math.min(current - 1, total - count + 1));
-  return Array.from({ length: count }, (_, index) => start + index);
+function getPageItems(current, total) {
+  if (total <= 5) return Array.from({ length: total }, (_, index) => index + 1);
+  if (current <= 3) return [1, 2, 3, 4, "right", total];
+  if (current >= total - 2) return [1, "left", total - 3, total - 2, total - 1, total];
+  return [1, "left", current - 1, current, current + 1, "right", total];
 }
 
 function queryTerms(query) {
@@ -147,13 +148,22 @@ function render() {
   $("#next").disabled = page === totalPages;
   const numbers = $("#page-numbers");
   numbers.replaceChildren();
-  getPageNumbers(page, totalPages).forEach((number) => {
+  getPageItems(page, totalPages).forEach((item) => {
+    if (typeof item === "string") {
+      const ellipsis = document.createElement("span");
+      ellipsis.className = "ellipsis";
+      ellipsis.textContent = "…";
+      ellipsis.setAttribute("aria-hidden", "true");
+      numbers.append(ellipsis);
+      return;
+    }
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = number;
-    button.className = number === page ? "active" : "";
-    if (number === page) button.setAttribute("aria-current", "page");
-    button.addEventListener("click", () => { page = number; render(); });
+    button.textContent = item;
+    button.className = item === page ? "active" : "";
+    button.setAttribute("aria-label", `第 ${item} 页`);
+    if (item === page) button.setAttribute("aria-current", "page");
+    button.addEventListener("click", () => { page = item; render(); });
     numbers.append(button);
   });
 }
@@ -212,7 +222,7 @@ $("#previous").addEventListener("click", () => { page--; render(); });
 $("#next").addEventListener("click", () => { page++; render(); });
 
 const searchCheck = { fullname: "Science Translational Medicine", abbr: "SCI TRANSL MED", issn: "1946-6234" };
-console.assert(parseCsv('a,b\n"x,y",z')[0].a === "x,y" && getPageNumbers(10, 10).join() === "8,9,10" && matchesQuery(searchCheck, queryTerms("trans m")) && !matchesQuery(searchCheck, queryTerms("trans x")));
+console.assert(parseCsv('a,b\n"x,y",z')[0].a === "x,y" && getPageItems(9, 460).join() === "1,left,8,9,10,right,460" && matchesQuery(searchCheck, queryTerms("trans m")) && !matchesQuery(searchCheck, queryTerms("trans x")));
 
 Promise.all(["./rank.csv", "./ccf-directory.csv"].map((url) => fetch(url).then((response) => {
   if (!response.ok) throw new Error();
