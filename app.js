@@ -11,6 +11,8 @@ const queryInput = $("#query");
 const categorySelect = $("#category");
 const typeSelect = $("#type-filter");
 const ccfToggle = $("#show-ccf");
+const filterToggle = $("#filter-toggle");
+const gradeSelects = [...document.querySelectorAll("#grade-filters select")];
 
 function parseCsv(source) {
   const rows = [];
@@ -48,6 +50,12 @@ function queryTerms(query) {
 function matchesQuery(journal, terms) {
   const searchable = [journal.fullname, journal.abbr, journal.issn].join(" ").toLocaleLowerCase();
   return terms.every((term) => searchable.includes(term));
+}
+
+function matchesGradeFilters(journal, catalogMode, [scuRank, ccfRank, casZone, top]) {
+  return (!scuRank || (catalogMode === "ccf" ? journal.scuRank : journal.rank) === scuRank) &&
+    (!ccfRank || (catalogMode === "ccf" ? journal.rank : journal["ccf-rank"]) === ccfRank) &&
+    (catalogMode === "ccf" || ((!casZone || journal["分区"] === casZone) && (!top || journal["Top 期刊"] === top)));
 }
 
 function appendHighlighted(parent, text, terms) {
@@ -130,6 +138,7 @@ function render() {
   filtered = journals.filter((journal) =>
     (!category || journal.category === category) &&
     (!type || journal.type === type) &&
+    matchesGradeFilters(journal, mode, gradeSelects.map((select) => select.value)) &&
     matchesQuery(journal, terms)
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -170,6 +179,29 @@ function render() {
 
 function resetAndRender() { page = 1; $("#clear").hidden = !queryInput.value; render(); }
 
+function setGradeFiltersOpen(open) {
+  $("#grade-filters").hidden = !open;
+  filterToggle.setAttribute("aria-expanded", String(open));
+  filterToggle.setAttribute("aria-label", open ? "收起等级筛选" : "展开等级筛选");
+  filterToggle.title = open ? "收起等级筛选" : "展开等级筛选";
+}
+
+function updateGradeFilterState() {
+  const active = gradeSelects.some((select) => select.value);
+  $("#filter-dot").hidden = !active;
+  $("#clear-grade-filters").disabled = !active;
+}
+
+function updateGradeFilterVisibility() {
+  const isCcf = mode === "ccf";
+  $("#grade-filters").prepend(isCcf ? $("#ccf-rank-field") : $("#scu-rank-field"));
+  $("#cas-zone-field").hidden = isCcf;
+  $("#top-filter-field").hidden = isCcf;
+  $("#scu-rank-field").hidden = isCcf && typeSelect.value === "会议";
+  $("#ccf-rank-field").hidden = !isCcf && !ccfToggle.checked;
+  if ($("#ccf-rank-field").hidden) $("#ccf-rank-filter").value = "";
+}
+
 function populateCategories() {
   categorySelect.replaceChildren();
   const all = document.createElement("option");
@@ -191,6 +223,10 @@ function setMode(nextMode) {
   journals = mode === "ccf" ? ccfEntries : scuJournals;
   queryInput.value = "";
   typeSelect.value = "";
+  gradeSelects.forEach((select) => { select.value = ""; });
+  setGradeFiltersOpen(false);
+  updateGradeFilterVisibility();
+  updateGradeFilterState();
   $("#clear").hidden = true;
   document.title = mode === "ccf" ? "CCF 期刊与会议查询" : "川大期刊分级查询";
   $("#page-title").textContent = mode === "ccf" ? "CCF 期刊与会议查询" : "川大期刊分级查询";
@@ -214,15 +250,39 @@ function setMode(nextMode) {
 
 queryInput.addEventListener("input", resetAndRender);
 $("#clear").addEventListener("click", () => { queryInput.value = ""; queryInput.focus(); resetAndRender(); });
-categorySelect.addEventListener("change", () => { if (mode === "scu") ccfToggle.checked = categorySelect.value === "计算机科学"; resetAndRender(); });
-typeSelect.addEventListener("change", resetAndRender);
-ccfToggle.addEventListener("change", render);
+categorySelect.addEventListener("change", () => {
+  if (mode === "scu") {
+    ccfToggle.checked = categorySelect.value === "计算机科学";
+    updateGradeFilterVisibility();
+    updateGradeFilterState();
+  }
+  resetAndRender();
+});
+typeSelect.addEventListener("change", () => {
+  if (typeSelect.value === "会议") $("#scu-rank-filter").value = "";
+  updateGradeFilterVisibility();
+  updateGradeFilterState();
+  resetAndRender();
+});
+ccfToggle.addEventListener("change", () => {
+  updateGradeFilterVisibility();
+  updateGradeFilterState();
+  resetAndRender();
+});
+filterToggle.addEventListener("click", () => setGradeFiltersOpen(filterToggle.getAttribute("aria-expanded") !== "true"));
+gradeSelects.forEach((select) => select.addEventListener("change", () => { updateGradeFilterState(); resetAndRender(); }));
+$("#clear-grade-filters").addEventListener("click", () => {
+  gradeSelects.forEach((select) => { select.value = ""; });
+  updateGradeFilterState();
+  resetAndRender();
+});
 document.querySelectorAll(".mode-switch button").forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
 $("#previous").addEventListener("click", () => { page--; render(); });
 $("#next").addEventListener("click", () => { page++; render(); });
 
 const searchCheck = { fullname: "Science Translational Medicine", abbr: "SCI TRANSL MED", issn: "1946-6234" };
-console.assert(parseCsv('a,b\n"x,y",z')[0].a === "x,y" && getPageItems(9, 460).join() === "1,left,8,9,10,right,460" && matchesQuery(searchCheck, queryTerms("trans m")) && !matchesQuery(searchCheck, queryTerms("trans x")));
+const gradeCheck = { rank: "A", "ccf-rank": "B", "分区": "1", "Top 期刊": "是" };
+console.assert(parseCsv('a,b\n"x,y",z')[0].a === "x,y" && getPageItems(9, 460).join() === "1,left,8,9,10,right,460" && matchesQuery(searchCheck, queryTerms("trans m")) && !matchesQuery(searchCheck, queryTerms("trans x")) && matchesGradeFilters(gradeCheck, "scu", ["A", "B", "1", "是"]) && !matchesGradeFilters(gradeCheck, "scu", ["B", "", "", ""]));
 
 Promise.all(["./rank.csv", "./ccf-directory.csv"].map((url) => fetch(url).then((response) => {
   if (!response.ok) throw new Error();

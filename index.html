@@ -47,6 +47,52 @@
         <span class="toggle-track" aria-hidden="true"><span></span></span>
         <span>显示 CCF</span>
       </label>
+      <button id="filter-toggle" class="filter-toggle" type="button" aria-label="展开等级筛选" title="展开等级筛选" aria-expanded="false" aria-controls="grade-filters">
+        <span class="filter-icon" aria-hidden="true"></span>
+        <span id="filter-dot" class="filter-dot" aria-hidden="true" hidden></span>
+      </button>
+      <div id="grade-filters" class="grade-filters" hidden>
+        <label id="scu-rank-field" class="grade-filter-field">
+          <span>川大分级</span>
+          <select id="scu-rank-filter">
+            <option value="">全部分级</option>
+            <option value="A">A</option>
+            <option value="A-">A−</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+          </select>
+        </label>
+        <label id="ccf-rank-field" class="grade-filter-field">
+          <span>CCF 分级</span>
+          <select id="ccf-rank-filter">
+            <option value="">全部分级</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+        </label>
+        <label id="cas-zone-field" class="grade-filter-field">
+          <span>中科院分区</span>
+          <select id="cas-zone-filter">
+            <option value="">全部分区</option>
+            <option value="1">1 区</option>
+            <option value="2">2 区</option>
+            <option value="3">3 区</option>
+            <option value="4">4 区</option>
+          </select>
+        </label>
+        <label id="top-filter-field" class="grade-filter-field">
+          <span>Top 期刊</span>
+          <select id="top-filter">
+            <option value="">全部期刊</option>
+            <option value="是">Top 期刊</option>
+            <option value="否">非 Top 期刊</option>
+          </select>
+        </label>
+        <button id="clear-grade-filters" class="clear-grade-filters" type="button" disabled>清除等级筛选</button>
+      </div>
     </section>
 
     <section class="results" aria-live="polite">
