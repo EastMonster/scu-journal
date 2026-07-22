@@ -1,4 +1,4 @@
-:root { --ink:#10263f; --muted:#6f7580; --red:#b4233a; --paper:#f7f4ed; --line:#ded8cc; --white:#fffefa; }
+:root { --ink:#10263f; --muted:#6f7580; --red:#b4233a; --paper:#f7f4ed; --line:#ded8cc; --white:#fffefa; --mono:"Cascadia Mono",Consolas,"SFMono-Regular","Liberation Mono","Courier New",monospace; }
 * { box-sizing:border-box; }
 html { background:var(--paper); }
 body { margin:0; color:var(--ink); background:linear-gradient(rgb(16 38 63/.025) 1px,transparent 1px),linear-gradient(90deg,rgb(16 38 63/.025) 1px,transparent 1px),var(--paper); background-size:32px 32px; font-family:"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif; }
@@ -6,10 +6,10 @@ button,input,select { font:inherit; }
 button,select { cursor:pointer; }
 main { min-height:100vh; }
 .hero { max-width:1180px; margin:auto; padding:72px 24px 38px; }
-.eyebrow { display:flex; gap:10px; align-items:center; color:var(--red); font:700 12px/1.2 ui-monospace,SFMono-Regular,monospace; letter-spacing:.12em; text-transform:uppercase; }
+.eyebrow { display:flex; gap:10px; align-items:center; color:var(--red); font:700 12px/1.2 var(--mono); letter-spacing:.12em; text-transform:uppercase; }
 .eyebrow span { width:26px; height:2px; background:var(--red); }
 .hero-title-row { display:flex; gap:24px; align-items:flex-end; justify-content:space-between; }
-h1 { margin:14px 0 8px; font-family:"Songti SC",SimSun,serif; font-size:clamp(44px,7vw,78px); font-weight:800; letter-spacing:-.055em; }
+h1 { margin:14px 0 8px; font-family:"font-family: system-ui, "Microsoft YaHei", "Noto Sans SC", sans-serif;",SimSun,serif; font-size:clamp(44px,7vw,78px); font-weight:400; letter-spacing:-.055em; }
 .hero p { margin:0; color:var(--muted); font-size:17px; }
 .mode-switch { display:flex; flex:none; margin-bottom:18px; padding:4px; border:1px solid var(--line); border-radius:11px; background:rgb(255 254 250/.9); }
 .mode-switch button { height:38px; padding:0 16px; border:0; border-radius:7px; color:var(--muted); background:transparent; font-size:13px; font-weight:700; }
@@ -36,7 +36,7 @@ h1 { margin:14px 0 8px; font-family:"Songti SC",SimSun,serif; font-size:clamp(44
 .results { max-width:1180px; margin:34px auto 0; padding:0 24px 56px; }
 .results-heading { display:flex; justify-content:space-between; align-items:end; margin-bottom:14px; color:var(--muted); font-size:13px; }
 .results-heading>div { display:flex; align-items:baseline; gap:7px; }
-.results-heading strong { color:var(--ink); font:700 27px/1 ui-monospace,SFMono-Regular,monospace; }
+.results-heading strong { color:var(--ink); font:700 27px/1 var(--mono); }
 .results-label { margin-right:6px; color:var(--ink); font-weight:700; }
 .table-wrap { overflow:hidden; border:1px solid var(--line); border-radius:14px; background:var(--white); box-shadow:0 8px 30px rgb(16 38 63/.05); }
 table { width:100%; border-collapse:collapse; }
@@ -46,12 +46,12 @@ tbody tr { transition:background .15s; }
 tbody tr:hover { background:#fbf8f2; }
 .journal-cell { width:40%; }
 .journal-cell strong { display:block; color:var(--ink); font-size:15px; line-height:1.45; }
-.journal-cell>span { display:block; margin-top:4px; color:#878b91; font:12px/1.4 ui-monospace,SFMono-Regular,monospace; }
+.journal-cell>span { display:block; margin-top:4px; color:#878b91; font:12px/1.4 var(--mono); }
 mark { padding:0; color:var(--red); background:transparent; font-weight:800; }
 .grade,.top { display:inline-flex; min-width:38px; height:30px; align-items:center; justify-content:center; border-radius:7px; font-size:14px; font-weight:800; }
-.grade-navy { color:#fff; background:var(--ink); }
-.grade-red { color:#fff; background:var(--red); }
-.grade-gold { color:#644b0d; background:#eee0b4; }
+.grade-navy { color:#173754; background:#e7eff7; }
+.grade-red { color:#8f172c; background:#f8e7ea; }
+.grade-gold { color:#61480c; background:#f3e8c8; }
 .top { color:var(--red); border:1px solid rgb(180 35 58/.35); background:#fff2f2; letter-spacing:.05em; }
 .muted { color:#bbb7af; }
 .message { padding:72px 24px; border:1px dashed var(--line); border-radius:14px; color:var(--muted); background:rgb(255 254 250/.72); text-align:center; }
