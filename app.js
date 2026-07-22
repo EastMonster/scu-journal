@@ -36,21 +36,26 @@ function getPageNumbers(current, total) {
   return Array.from({ length: count }, (_, index) => start + index);
 }
 
-function appendHighlighted(parent, text, query) {
-  const needle = query.trim();
-  if (!needle) { parent.append(text); return; }
-  const lower = text.toLocaleLowerCase();
-  const target = needle.toLocaleLowerCase();
-  let cursor = 0, match = lower.indexOf(target);
-  while (match >= 0) {
-    parent.append(text.slice(cursor, match));
+function queryTerms(query) {
+  return [...new Set(query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean))];
+}
+
+function matchesQuery(journal, terms) {
+  const searchable = [journal.fullname, journal.abbr, journal.issn].join(" ").toLocaleLowerCase();
+  return terms.every((term) => searchable.includes(term));
+}
+
+function appendHighlighted(parent, text, terms) {
+  if (!terms.length) { parent.append(text); return; }
+  const escaped = [...terms].sort((a, b) => b.length - a.length)
+    .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const pattern = new RegExp(`(${escaped.join("|")})`, "gi");
+  text.split(pattern).forEach((part) => {
+    if (!terms.includes(part.toLocaleLowerCase())) { parent.append(part); return; }
     const mark = document.createElement("mark");
-    mark.textContent = text.slice(match, match + needle.length);
+    mark.textContent = part;
     parent.append(mark);
-    cursor = match + needle.length;
-    match = lower.indexOf(target, cursor);
-  }
-  parent.append(text.slice(cursor));
+  });
 }
 
 function grade(value, tone = "navy") {
@@ -67,7 +72,7 @@ function cell(label, child) {
   return td;
 }
 
-function renderTable(rows) {
+function renderTable(rows, terms) {
   const wrap = document.createElement("div");
   wrap.className = "table-wrap";
   const table = document.createElement("table");
@@ -83,11 +88,11 @@ function renderTable(rows) {
     const journalCell = document.createElement("td");
     journalCell.className = "journal-cell";
     const name = document.createElement("strong");
-    appendHighlighted(name, journal.fullname, queryInput.value);
+    appendHighlighted(name, journal.fullname, terms);
     const details = document.createElement("span");
-    appendHighlighted(details, journal.abbr, queryInput.value);
+    appendHighlighted(details, journal.abbr, terms);
     details.append(" · ");
-    appendHighlighted(details, journal.issn, queryInput.value);
+    appendHighlighted(details, journal.issn, terms);
     journalCell.append(name, details);
     tr.append(journalCell);
     tr.append(cell("学科分类", journal.category === "/" ? "未分类" : journal.category));
@@ -105,11 +110,11 @@ function renderTable(rows) {
 }
 
 function render() {
-  const query = queryInput.value.trim().toLocaleLowerCase();
+  const terms = queryTerms(queryInput.value);
   const category = categorySelect.value;
   filtered = journals.filter((journal) =>
     (!category || journal.category === category) &&
-    (!query || [journal.fullname, journal.abbr, journal.issn].some((value) => value.toLocaleLowerCase().includes(query)))
+    matchesQuery(journal, terms)
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   page = Math.min(page, totalPages);
@@ -118,7 +123,7 @@ function render() {
   const content = $("#content");
   content.replaceChildren();
   content.className = visible.length ? "" : "message";
-  if (visible.length) content.append(renderTable(visible));
+  if (visible.length) content.append(renderTable(visible, terms));
   else content.textContent = "没有找到匹配的期刊，请尝试其他关键词或分类。";
 
   const pagination = $("#pagination");
@@ -146,7 +151,8 @@ ccfToggle.addEventListener("change", render);
 $("#previous").addEventListener("click", () => { page--; render(); });
 $("#next").addEventListener("click", () => { page++; render(); });
 
-console.assert(parseCsv('a,b\n"x,y",z')[0].a === "x,y" && getPageNumbers(10, 10).join() === "8,9,10");
+const searchCheck = { fullname: "Science Translational Medicine", abbr: "SCI TRANSL MED", issn: "1946-6234" };
+console.assert(parseCsv('a,b\n"x,y",z')[0].a === "x,y" && getPageNumbers(10, 10).join() === "8,9,10" && matchesQuery(searchCheck, queryTerms("trans m")) && !matchesQuery(searchCheck, queryTerms("trans x")));
 
 fetch("./rank.csv")
   .then((response) => { if (!response.ok) throw new Error(); return response.text(); })
