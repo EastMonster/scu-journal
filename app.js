@@ -1,4 +1,3 @@
-const PAGE_SIZE = 20;
 let scuJournals = [];
 let ccfEntries = [];
 let journals = [];
@@ -13,6 +12,7 @@ const typeSelect = $("#type-filter");
 const ccfToggle = $("#show-ccf");
 const filterToggle = $("#filter-toggle");
 const gradeSelects = [...document.querySelectorAll("#grade-filters select")];
+const pageSizeSelect = $("#page-size");
 
 function parseCsv(source) {
   const rows = [];
@@ -141,9 +141,10 @@ function render() {
     matchesGradeFilters(journal, mode, gradeSelects.map((select) => select.value)) &&
     matchesQuery(journal, terms)
   );
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSize = Number(pageSizeSelect.value);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   page = Math.min(page, totalPages);
-  const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
   $("#result-count").textContent = filtered.length.toLocaleString("zh-CN");
   const content = $("#content");
   content.replaceChildren();
@@ -152,7 +153,10 @@ function render() {
   else content.textContent = mode === "ccf" ? "没有找到匹配的期刊或会议，请尝试其他关键词或筛选条件。" : "没有找到匹配的期刊，请尝试其他关键词或分类。";
 
   const pagination = $("#pagination");
-  pagination.hidden = filtered.length <= PAGE_SIZE;
+  pagination.hidden = filtered.length <= Number(pageSizeSelect.options[0].value);
+  $("#previous").hidden = totalPages === 1;
+  $("#page-numbers").hidden = totalPages === 1;
+  $("#next").hidden = totalPages === 1;
   $("#previous").disabled = page === 1;
   $("#next").disabled = page === totalPages;
   const numbers = $("#page-numbers");
@@ -279,6 +283,7 @@ $("#clear-grade-filters").addEventListener("click", () => {
 document.querySelectorAll(".mode-switch button").forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
 $("#previous").addEventListener("click", () => { page--; render(); });
 $("#next").addEventListener("click", () => { page++; render(); });
+pageSizeSelect.addEventListener("change", resetAndRender);
 
 const searchCheck = { fullname: "Science Translational Medicine", abbr: "SCI TRANSL MED", issn: "1946-6234" };
 const gradeCheck = { rank: "A", "ccf-rank": "B", "分区": "1", "Top 期刊": "是" };
